@@ -1,0 +1,206 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.75rem;
+
+    /* Theme color variables */
+    --theme-primary: 139, 92, 246;
+    --theme-secondary: 59, 130, 246;
+    --theme-accent: 168, 85, 247;
+  }
+
+  /* 强制深色模式，覆盖系统设置 */
+  .dark,
+  :root {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 94.1%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    overflow-x: hidden;
+    /* 强制深色背景，防止浏览器设置影响 */
+    background: linear-gradient(to bottom right, #1f2937, #1e3a8a, #581c87) !important;
+    color: #f3f4f6 !important;
+  }
+}
+
+/* 自定义滚动条 - 深色主题 */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* 渐变动画 */
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient 3s ease infinite;
+}
+
+/* 在移动设备上隐藏粒子效果 */
+@media (max-width: 768px) {
+  canvas {
+    display: none;
+  }
+}
+
+/* 为卡片添加护眼的悬停效果 */
+.card-glow-hover {
+  transition: all 0.3s ease;
+}
+
+.card-glow-hover:hover {
+  box-shadow: 0 0 20px rgba(var(--theme-primary), 0.3), 0 0 40px rgba(var(--theme-secondary), 0.2), 0 10px 30px
+    rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+/* 按钮光效增强 */
+.button-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.button-glow::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.button-glow:hover::before {
+  left: 100%;
+}
+
+/* 主题相关的动态样式 */
+.theme-gradient {
+  background: linear-gradient(45deg, rgb(var(--theme-primary)), rgb(var(--theme-secondary)));
+}
+
+.theme-text {
+  background: linear-gradient(45deg, rgb(var(--theme-primary)), rgb(var(--theme-secondary)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.theme-border {
+  border-color: rgb(var(--theme-primary));
+}
+
+.theme-shadow {
+  box-shadow: 0 0 20px rgba(var(--theme-primary), 0.3);
+}
+
+/* 护眼模式的特殊样式 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-gradient {
+    animation: none;
+  }
+
+  canvas {
+    display: none;
+  }
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .card-glow-hover:hover {
+    box-shadow: 0 0 0 2px white;
+  }
+}
+
+/* 强制覆盖任何可能的浅色模式样式 */
+@media (prefers-color-scheme: light) {
+  body {
+    background: linear-gradient(to bottom right, #1f2937, #1e3a8a, #581c87) !important;
+    color: #f3f4f6 !important;
+  }
+}
+
+/* 确保所有输入框在深色模式下正确显示 */
+input,
+textarea,
+select {
+  background-color: rgba(31, 41, 55, 0.5) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  color: #f3f4f6 !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(156, 163, 175, 1) !important;
+}
