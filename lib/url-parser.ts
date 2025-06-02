@@ -4,7 +4,7 @@ import { generateSmartName, generateSmartDescription, generateSmartNotes } from 
 
 export interface ParsedWebsite {
   url: string
-  name?: string
+  name: string
   category?: string
   notes?: string
 }
@@ -50,21 +50,19 @@ export function extractUrlFromText(text: string): string | null {
     return null
   }
 
-  // URL正则表达式 - 匹配http(s)://开头的URL
-  const urlRegex = /https?:\/\/[^\s<>"']+/i
+  // URL正则表达式 - 匹配http(s)://开头的URL，遇到空格即结束
+  const urlRegex = /https?:\/\/[\S]+/i
   const match = text.match(urlRegex)
 
   if (match) {
     let url = match[0]
-
     // 移除URL末尾的标点符号
-    url = url.replace(/[.,;:!?'")\]}]+$/, "")
-
+    url = url.replace(/[.,;:!?'\")\]}]+$/, "")
     return cleanUrl(url)
   }
 
   // 如果没有找到完整URL，尝试查找域名模式
-  const domainRegex = /(?:^|\s)([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,})?(?=\s|$|[.,;:!?'")\]}])/
+  const domainRegex = /(?:^|\s)([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,})?(?=\s|$|[.,;:!?'\")\]}])/ 
   const domainMatch = text.match(domainRegex)
 
   if (domainMatch) {
@@ -75,36 +73,39 @@ export function extractUrlFromText(text: string): string | null {
   return null
 }
 
-// 智能解析批量输入
+function isUrl(line: string): boolean {
+  return /^https?:\/\//.test(line.trim())
+}
+
 export function parseSmartBatchInput(text: string): ParsedWebsite[] {
-  if (!text || typeof text !== "string") {
-    return []
-  }
-
-  const lines = text.split("\n").filter((line) => line.trim())
-  const websites: ParsedWebsite[] = []
-
-  for (const line of lines) {
-    const trimmed = line.trim()
-    if (!trimmed) continue
-
-    // 跳过明显的标题行
-    if (trimmed.match(/^(书签|收藏|导航|网站|链接)$/i)) {
-      continue
-    }
-
-    try {
-      const parsed = parseWebsiteLine(trimmed)
-      if (parsed && parsed.url) {
-        websites.push(parsed)
+  const lines = text.split(/\r?\n/)
+  let currentCategory = ""
+  let currentUrl = ""
+  let currentNotes: string[] = []
+  const result: ParsedWebsite[] = []
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim()
+    if (!line) continue
+    if (isUrl(line)) {
+      // 如果有上一个网址，先保存
+      if (currentUrl) {
+        result.push({ url: currentUrl, name: "", category: currentCategory, notes: currentNotes.join("\n") })
+        currentNotes = []
       }
-    } catch (error) {
-      console.warn("解析行失败:", trimmed, error)
-      continue
+      currentUrl = line
+    } else if (!isUrl(line) && !currentUrl) {
+      // 作为分组名
+      currentCategory = line
+    } else {
+      // 作为当前网址的notes
+      currentNotes.push(line)
     }
   }
-
-  return websites
+  // 收尾
+  if (currentUrl) {
+    result.push({ url: currentUrl, name: "", category: currentCategory, notes: currentNotes.join("\n") })
+  }
+  return result
 }
 
 // 解析单行网站信息 - 使用智能命名
@@ -161,7 +162,7 @@ export function parseWebsiteLine(line: string): ParsedWebsite | null {
     url,
     name: smartName,
     category: category || "",
-    notes: smartNotes || smartDescription,
+    notes: smartNotes && smartNotes.trim() ? smartNotes : "",
   }
 }
 

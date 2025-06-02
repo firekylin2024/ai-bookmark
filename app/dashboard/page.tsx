@@ -15,6 +15,7 @@ import { useTheme } from "@/components/theme-provider"
 import { WebsiteCard } from "@/components/website-card"
 import { WebsiteEditDialog, type WebsiteData } from "@/components/website-edit-dialog"
 import { QuickAddWidget } from "@/components/quick-add-widget"
+import { CategoryCombobox } from "@/components/category-combobox"
 
 export default function DashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState("全部")
@@ -25,6 +26,9 @@ export default function DashboardPage() {
   const [categories, setCategories] = useState<string[]>(["全部"])
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const { currentTheme, setTheme } = useTheme()
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [batchCategory, setBatchCategory] = useState("")
+  const [batchMode, setBatchMode] = useState(false)
 
   // 从localStorage加载AI分析结果
   useEffect(() => {
@@ -334,19 +338,47 @@ export default function DashboardPage() {
           {/* 控制面板 */}
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
             {/* 分类筛选 */}
-            <div className="flex flex-wrap gap-2">
-              {categories.map((category) => (
-                <Badge
-                  key={category}
-                  variant={selectedCategory === category ? "default" : "secondary"}
-                  className={`cursor-pointer transition-colors ${
-                    selectedCategory === category ? "theme-gradient" : "bg-white/10 text-gray-300 hover:bg-white/20"
-                  }`}
-                  onClick={() => setSelectedCategory(category)}
-                >
-                  {category}
-                </Badge>
-              ))}
+            <div className="flex items-center gap-2 mb-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-blue-400/60 text-blue-300 hover:bg-blue-900/30"
+                onClick={() => {
+                  const name = prompt('请输入新分类名称')?.trim();
+                  if (name && !categories.includes(name)) {
+                    setCategories([...(categories || []), name]);
+                    localStorage.setItem('naviai-categories', JSON.stringify([...(categories || []), name]));
+                  }
+                }}
+              >
+                + 新建分类
+              </Button>
+              <div className="flex flex-wrap gap-3 mb-2">
+                {categories.map((category) => (
+                  <Badge
+                    key={category}
+                    variant={selectedCategory === category ? "default" : "secondary"}
+                    className={`cursor-pointer transition-colors px-5 py-2 text-lg font-bold rounded-full shadow-sm border-2 border-transparent ${
+                      selectedCategory === category
+                        ? "theme-gradient text-white border-blue-400/80 scale-105" 
+                        : "bg-white/10 text-gray-200 hover:bg-white/20 hover:text-blue-400"
+                    }`}
+                    onClick={() => setSelectedCategory(category)}
+                    onDrop={e => {
+                      e.preventDefault();
+                      const websiteId = e.dataTransfer.getData('websiteId');
+                      if (websiteId) {
+                        const updatedWebsites = websites.map(w => w.id === Number(websiteId) ? { ...w, category } : w);
+                        setWebsites(updatedWebsites);
+                        localStorage.setItem('naviai-websites', JSON.stringify(updatedWebsites));
+                      }
+                    }}
+                    onDragOver={e => e.preventDefault()}
+                  >
+                    {category}
+                  </Badge>
+                ))}
+              </div>
             </div>
 
             {/* 控制选项 */}
@@ -387,6 +419,37 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* 批量操作栏 */}
+        {batchMode && selectedIds.length > 0 && (
+          <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-gray-900 border border-blue-400/40 rounded-lg shadow-lg px-6 py-3 flex items-center gap-4">
+            <span className="text-white text-sm">已选 {selectedIds.length} 个网站，批量设置分类：</span>
+            <CategoryCombobox
+              value={batchCategory}
+              onChange={setBatchCategory}
+              recommended={categories.filter(c => c !== "全部")}
+              history={[]}
+              placeholder="选择或输入分类"
+            />
+            <Button
+              onClick={() => {
+                const updatedWebsites = websites.map(w => selectedIds.includes(w.id) ? { ...w, category: batchCategory } : w)
+                setWebsites(updatedWebsites)
+                setSelectedIds([])
+                setBatchCategory("")
+                setBatchMode(false)
+                localStorage.setItem("naviai-websites", JSON.stringify(updatedWebsites))
+                const uniqueCategories = [...new Set(updatedWebsites.map((w) => w.category))]
+                setCategories(["全部", ...uniqueCategories])
+              }}
+              disabled={!batchCategory}
+              className="bg-blue-600 text-white"
+            >
+              应用
+            </Button>
+            <Button variant="ghost" onClick={() => { setSelectedIds([]); setBatchMode(false) }} className="text-gray-400">取消</Button>
+          </div>
+        )}
+
         {/* 网站网格 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {/* 快速添加组件 */}
@@ -401,6 +464,11 @@ export default function DashboardPage() {
               onDelete={handleDeleteWebsite}
               relatedWebsites={group.related}
               isGrouped={groupRelated}
+              selected={batchMode && selectedIds.includes(group.main.id)}
+              onSelectChange={batchMode ? (checked => {
+                setSelectedIds(ids => checked ? [...ids, group.main.id] : ids.filter(id => id !== group.main.id))
+              }) : undefined}
+              batchMode={batchMode}
             />
           ))}
         </div>

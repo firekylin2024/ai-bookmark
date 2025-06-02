@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Edit3, Trash2, Save, Info, Sparkles, Wand2, CheckCircle } from "lucide-react"
 import { parseWebsiteLine } from "@/lib/url-parser"
 import { generateSmartName, generateSmartDescription } from "@/lib/smart-naming"
+import { CategoryCombobox } from "./category-combobox"
 
 // 常用分类列表
 const COMMON_CATEGORIES = [
@@ -56,6 +57,7 @@ export function WebsiteEditDialog({ website, open, onOpenChange, onSave, onDelet
   const [smartInput, setSmartInput] = useState("")
   const [parseResult, setParseResult] = useState<any>(null)
   const [activeTab, setActiveTab] = useState("manual")
+  const [categoryHistory, setCategoryHistory] = useState<string[]>([])
 
   // 判断是否为新增模式
   const isAddMode = website?.id === 0
@@ -364,18 +366,16 @@ export function WebsiteEditDialog({ website, open, onOpenChange, onSave, onDelet
                 <Label htmlFor="website-category" className="text-gray-300">
                   分类
                 </Label>
-                <Select value={editedWebsite.category} onValueChange={(value) => handleChange("category", value)}>
-                  <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
-                    <SelectValue placeholder="选择分类" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-600 text-white">
-                    {COMMON_CATEGORIES.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <CategoryCombobox
+                  value={editedWebsite.category}
+                  onChange={(value) => {
+                    handleChange("category", value)
+                    if (value && !categoryHistory.includes(value)) setCategoryHistory([value, ...categoryHistory])
+                  }}
+                  recommended={COMMON_CATEGORIES}
+                  history={categoryHistory}
+                  placeholder="请输入或选择分类"
+                />
               </div>
 
               <div className="space-y-2">
@@ -398,14 +398,10 @@ export function WebsiteEditDialog({ website, open, onOpenChange, onSave, onDelet
 
                 <Textarea
                   id="website-notes"
-                  value={editedWebsite.notes}
+                  value={editedWebsite.notes ?? ""}
                   onChange={(e) => handleChange("notes", e.target.value)}
-                  className="bg-gray-800 border-gray-600 text-white min-h-[100px]"
-                  placeholder={
-                    hasAIDescription && !hasUserNotes
-                      ? "添加个人注释替换AI描述，或留空使用AI描述"
-                      : "添加个人注释、使用说明或提醒（如会员到期时间等）"
-                  }
+                  className="bg-gray-800 border-gray-600 text-white min-h-[80px] font-mono text-sm"
+                  placeholder=""
                 />
 
                 <p className="text-xs text-gray-400">💡 个人注释会替换AI生成的描述。留空则显示AI描述。</p>

@@ -59,6 +59,11 @@ export function QuickAddWidget({ onAddWebsite }: QuickAddWidgetProps) {
     setParseResults(results)
   }
 
+  const getNotes = (result: any) => {
+    if (result.data.fromHtml) return ""
+    return result.data.notes && result.data.notes.trim() ? result.data.notes : ""
+  }
+
   const handleAddAll = () => {
     const successResults = parseResults.filter((r) => r.success)
     successResults.forEach((result, index) => {
@@ -67,7 +72,7 @@ export function QuickAddWidget({ onAddWebsite }: QuickAddWidgetProps) {
         url: result.data.url,
         name: result.data.name || "未命名网站",
         category: result.data.category || "其他",
-        notes: result.data.notes || "",
+        notes: getNotes(result),
         color: "bg-blue-500",
         frequency: "中",
         clicks: 0,
@@ -87,7 +92,7 @@ export function QuickAddWidget({ onAddWebsite }: QuickAddWidgetProps) {
       url: result.data.url,
       name: result.data.name || "未命名网站",
       category: result.data.category || "其他",
-      notes: result.data.notes || "",
+      notes: getNotes(result),
       color: "bg-blue-500",
       frequency: "中",
       clicks: 0,

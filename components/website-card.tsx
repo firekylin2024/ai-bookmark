@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Edit3, ExternalLink, FileText, Link2, ChevronDown, ChevronUp } from "lucide-react"
 import { WebsiteEditDialog, type WebsiteData } from "./website-edit-dialog"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface WebsiteCardProps {
   website: WebsiteData
@@ -14,6 +15,9 @@ interface WebsiteCardProps {
   onDelete?: (id: number) => void
   relatedWebsites?: WebsiteData[] // 相关网站列表
   isGrouped?: boolean // 是否显示为分组
+  selected?: boolean // 是否被选中
+  onSelectChange?: (checked: boolean) => void // 选中状态变更
+  batchMode?: boolean // 是否批量模式
 }
 
 export function WebsiteCard({
@@ -23,6 +27,9 @@ export function WebsiteCard({
   onDelete,
   relatedWebsites = [],
   isGrouped = false,
+  selected = false,
+  onSelectChange,
+  batchMode = false,
 }: WebsiteCardProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
@@ -45,8 +52,8 @@ export function WebsiteCard({
     onEdit(editedWebsite)
   }
 
-  // 优先显示用户注释，如果没有则显示AI描述
-  const displayNotes = website.notes && website.notes.trim() ? website.notes : website.description || ""
+  // 优先显示用户注释，如果没有则显示空白
+  const displayNotes = website.notes && website.notes.trim() ? website.notes : ""
   const hasDisplayNotes = displayNotes.trim().length > 0
   const isUserNotes = website.notes && website.notes.trim().length > 0
 
@@ -78,14 +85,19 @@ export function WebsiteCard({
       <Card
         className={`group hover:shadow-lg transition-all duration-200 border-0 bg-white/10 backdrop-blur-sm cursor-pointer card-glow-hover border border-white/20 ${
           hasRelated ? "ring-1 ring-purple-400/30" : ""
-        }`}
+        } ${selected ? "ring-2 ring-blue-400/80" : ""}`}
         style={{
           backgroundColor: `${website.color}${Math.round(getOpacity(website.frequency) * 255)
             .toString(16)
             .padStart(2, "0")}`,
         }}
       >
-        <CardContent className="p-6">
+        <CardContent className="p-6 relative">
+          {typeof onSelectChange === "function" && batchMode && (
+            <div className="absolute left-2 top-2 z-10">
+              <Checkbox checked={selected} onCheckedChange={onSelectChange} />
+            </div>
+          )}
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
@@ -102,9 +114,6 @@ export function WebsiteCard({
                   </Badge>
                 )}
               </div>
-              <Badge variant="secondary" className="text-xs bg-white/20 text-white border-0">
-                {website.category}
-              </Badge>
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -146,7 +155,6 @@ export function WebsiteCard({
                   <p className={`text-xs leading-relaxed ${isUserNotes ? "text-white/90" : "text-blue-200"}`}>
                     {displayNotes}
                   </p>
-                  {!isUserNotes && <p className="text-xs text-blue-300/60 mt-1">AI生成 · 点击编辑添加个人注释</p>}
                 </div>
               </div>
             </div>
