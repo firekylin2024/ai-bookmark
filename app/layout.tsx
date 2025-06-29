@@ -24,7 +24,7 @@ export default function RootLayout({
       <head>
         <Script
           defer
-          data-domain="luck6.kylintest.space"
+          data-domain="smartbookmark.me"
           src="https://plausible.io/js/script.js"
           strategy="afterInteractive"
         />
